@@ -14,11 +14,9 @@ done
 
 EVENTHUB_ENDPOINT=$(az eventgrid topic show --name $TOPIC -g $RESOURCEGROUPNAME --query "endpoint" --output tsv)
 EVENTHUB_KEY=$(az eventgrid topic key list --name $TOPIC -g $RESOURCEGROUPNAME --query "key1" --output tsv)
-RAND=`echo $RANDOM`
-for i in 1 2 3
+
+while read -r ORDER;
    do
-      echo $RAND
-      event='[ {"id": "1", "eventType": "recordInserted", "subject": "ecomm/customers", "eventTime": "'`date +%Y-%m-%dT%H:%M:%S%z`'", "data":{ "make": "TTTTT", "model": "Monster"},"dataVersion": "1.0"} ]'
-      echo $event
-      curl -X POST -H "aeg-sas-key: $EVENTHUB_KEY" -d "$event" $EVENTHUB_ENDPOINT
-   done
+      echo $ORDER
+      curl -X POST -H "aeg-sas-key: $EVENTHUB_KEY" -d "$ORDER" $EVENTHUB_ENDPOINT
+   done < ecomm_orders.txt
