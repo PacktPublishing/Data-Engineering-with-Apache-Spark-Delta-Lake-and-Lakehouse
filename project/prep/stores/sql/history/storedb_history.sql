@@ -1,9 +1,38 @@
+DROP TABLE IF EXISTS [watermarktable];
+GO
+CREATE TABLE [watermarktable]
+(
+
+    [table_name] VARCHAR(255),
+    [watermark_value] DATETIME,
+);
+GO
+
+INSERT INTO [watermarktable]
+VALUES ('[dbo].[products]','1/1/2010 12:00:00 AM'),('[dbo].[store_customers]','1/1/2010 12:00:00 AM'), ('[dbo].[store_orders]','1/1/2010 12:00:00 AM');
+GO
+
+DROP PROCEDURE IF EXISTS [usp_write_watermark];
+GO
+
+CREATE PROCEDURE [usp_write_watermark] @LastModifiedtime datetime, @TableName varchar(50)
+AS
+BEGIN
+
+UPDATE [watermarktable]
+SET [watermark_value] = @LastModifiedtime
+WHERE [table_name] = @TableName
+
+END;
+GO
+
 DROP TABLE IF EXISTS [products];
 GO
 CREATE TABLE [products] (
     [product_code] VARCHAR(255) NULL,
     [product_name] VARCHAR(255) NULL,
-    [product_category ] VARCHAR(MAX) NULL
+    [product_category ] VARCHAR(MAX) NULL,
+	[updated_at] DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 GO
 
@@ -20,7 +49,8 @@ CREATE TABLE [store_customers] (
     [country] VARCHAR(100) NULL,
     [phone] VARCHAR(100) NULL,
     [email] VARCHAR(255) NULL,
-    [credit_card] VARCHAR(255) NULL
+    [credit_card] VARCHAR(255) NULL,
+	[updated_at] DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 GO
 
@@ -1064,7 +1094,8 @@ CREATE TABLE [store_orders] (
     [units] INTEGER NULL,
     [sale_price] VARCHAR(100) NULL,
     [currency] VARCHAR(255) NULL,
-    [order_mode] VARCHAR(255) NULL
+    [order_mode] VARCHAR(255) NULL,
+	[updated_at] DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 GO
 
