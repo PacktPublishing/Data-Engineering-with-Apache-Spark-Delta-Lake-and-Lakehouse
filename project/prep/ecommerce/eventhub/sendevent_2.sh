@@ -19,4 +19,4 @@ while read -r ORDER;
    do
       echo $ORDER
       curl -X POST -H "aeg-sas-key: $EVENTHUB_KEY" -d "$ORDER" $EVENTHUB_ENDPOINT
-   done < ~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/prep/ecommerce/eventhub/ecomm_orders_1.txt
+   done < ~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/prep/ecommerce/eventhub/ecomm_orders_2.txt
