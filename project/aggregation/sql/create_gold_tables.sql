@@ -14,11 +14,9 @@ BEGIN
 							FILE_FORMAT = ' + @format + '
 						) 
 					 AS  SELECT YEAR(order_date) AS year, DATEPART(QUARTER, order_date) as quarter,
-										round(sum(sale_price_usd),2) as aggregated_sales_price
-										FROM orders 
-										JOIN products  ON orders.product_id=products.product_id
-										JOIN customers ON orders.customer_id=customers.customer_id
-										GROUP BY YEAR(order_date), DATEPART(QUARTER, order_date) '	
+								round(sum(sale_price_usd),2) as aggregated_sales_price
+						   FROM orders 
+					   GROUP BY YEAR(order_date), DATEPART(QUARTER, order_date) '	
 	EXEC sp_executesql @sqlcmd
 
     SET @sqlcmd = N'CREATE EXTERNAL TABLE ext_total_website_hits 
@@ -54,10 +52,10 @@ BEGIN
 							DATA_SOURCE = ' + @extds + ',  
 							FILE_FORMAT = ' + @format + '
 						) 
-					 AS  SELECT product_category, product_name, YEAR(order_date) AS year, DATEPART(QUARTER, order_date) AS quarter, count(*) AS units_sold
+					 AS   SELECT product_category, orders.product_name, YEAR(order_date) AS year, DATEPART(QUARTER, order_date) AS quarter, count(*) AS units_sold
                             FROM orders
-                            JOIN products ON products.product_id=orders.product_id
-                            GROUP BY product_category, product_name, YEAR(order_date), DATEPART(QUARTER, order_date) '	
+                            JOIN products ON products.product_name=orders.product_name
+                            GROUP BY product_category, orders.product_name, YEAR(order_date), DATEPART(QUARTER, order_date) '	
 	EXEC sp_executesql @sqlcmd
 
 END;
