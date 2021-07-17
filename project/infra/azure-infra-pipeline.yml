@@ -1,0 +1,29 @@
+#trigger:
+# - master
+#- azure-pipelines
+
+
+variables:
+  - group: 'electroniz_infra_variables'
+
+stages:
+
+  - stage: SQL
+    jobs: 
+      - job: DeployAzureSQL
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/azure_sql/azure_sql.json'
+            overrideParameters: '-sqlAdministratorLogin $(SQL_USERNAME) -sqlAdministratorLoginPassword $(SQL_PASSWORD) -sqlServerName $(SQL_SERVERNAME) -databaseName $(SQL_DB_NAME)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'sql'  
