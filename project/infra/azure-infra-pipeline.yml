@@ -1,14 +1,13 @@
-#trigger:
+trigger:
 # - master
-#- azure-pipelines
-
+- azure-pipelines
 
 variables:
   - group: 'electroniz_infra_variables'
 
 stages:
 
-  - stage: SQL
+  - stage: Stores_Azure_SQL_Database
     jobs: 
       - job: DeployAzureSQL
         pool:
@@ -24,6 +23,126 @@ stages:
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
             csmFile: 'project/infra/azure_sql/azure_sql.json'
-            overrideParameters: '-sqlAdministratorLogin $(SQL_USERNAME) -sqlAdministratorLoginPassword $(SQL_PASSWORD) -sqlServerName $(SQL_SERVERNAME) -databaseName $(SQL_DB_NAME)'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -sqlAdministratorLogin $(SQL_USERNAME) -sqlAdministratorLoginPassword $(SQL_PASSWORD) -sqlServerName $(SQL_SERVERNAME) -databaseName $(SQL_DB_NAME)'
             deploymentMode: 'Incremental'
             deploymentName: 'sql'  
+
+  - stage: Lakehouse_Storage_Account
+    jobs: 
+      - job: DeployStorageAccount
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/storage_accounts/storage_accounts.json'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT)  -storageAccountName $(LAKEHOUSE_STORAGE_ACCOUNT) -bronzeLayer $(LAKEHOUSE_BRONZE_LAYER) -silverLayer $(LAKEHOUSE_SILVER_LAYER) -goldLayer $(LAKEHOUSE_GOLD_LAYER)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'storage_accounts'
+           
+  - stage: Lakehouse_Event_Hub
+    jobs: 
+      - job: DeployEventGridandHub
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/event_hubs/event_hub.json'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT)  -topicName $(EVENTHUB_TOPIC_NAME) -eventHubNamespace $(EVENTHUB_NAMESPACE) -eventHubName $(EVENTHUB_NAME) -storageAccountName $(EVENTHUB_STORAGE_ACCOUNT) -storageAccountContainerName $(EVENTHUB_CONTAINER) -subscriptionName $(EVENTHUB_SUBSCRIPTION)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'eventgridhub'
+            
+  - stage: Lakehouse_Databricks
+    jobs: 
+      - job: DeployDatabricksWorkspace
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/databricks/databricks.json'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -databricksWorkspaceName $(DATABRICKS_WORKSPACE_NAME)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'databricks'
+          
+  - stage: Lakehouse_DataFactory
+    jobs: 
+      - job: DeployDataFactory
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/data_factory/data_factory.json'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -factoryName $(DATAFACTORY_NAME)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'dataFactoryDeployment'
+            
+  - stage: Lakehouse_KeyVault
+    jobs: 
+      - job: DeployKeyVault
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/keyvault/keyvault.json'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT)  -kvName $(LAKEHOUSE_KEYSTORE_NAME)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'keyvault'
+            
+  - stage: Lakehouse_Synapse
+    jobs: 
+      - job: DeploySynapse
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          inputs:
+            deploymentScope: 'Resource Group'
+            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
+            subscriptionId: '$(SUBSCRIPTION_ID)'
+            action: 'Create Or Update Resource Group'
+            resourceGroupName: '$(RESOURCE_GROUP)'
+            location: '$(REGION)'
+            templateLocation: 'Linked artifact'
+            csmFile: 'project/infra/synapse/synapse.json'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT)  -synapseWorkspaceName $(SYNAPSE_WORKSPACE_NAME) -synapseAdministratorLogin $(SYNAPSE_USERNAME) -synapseAdministratorLoginPassword $(SYNAPSE_PASSWORD) -synapseStorageAccount $(LAKEHOUSE_STORAGE_ACCOUNT) -synapseStorageAccountFilesystem $(SYNAPSE_CONTAINER)'
+            deploymentMode: 'Incremental'
+            deploymentName: 'synapse'

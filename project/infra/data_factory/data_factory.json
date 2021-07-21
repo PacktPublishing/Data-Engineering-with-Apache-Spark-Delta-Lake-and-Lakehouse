@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "factoryName": {
+            "type": "string"
+        }
+    },
+    "variables": {
+         "factoryName": "[concat(parameters('factoryName'), uniqueString(resourceGroup().id))]",
+         "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('factoryName')]",
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "properties": {},
+			"identity": {
+            "type": "SystemAssigned"
+             },
+            "resources": []
+        }
+    ],
+    "outputs": {
+    "dataFactoryObjectID": {
+      "type": "string",
+      "value": "[reference(resourceId('factoryId'))]"
+    }
+  }
+}

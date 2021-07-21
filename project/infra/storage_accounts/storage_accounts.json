@@ -2,11 +2,26 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "storageAccountName": {
+        "environment": {
+          "type": "string"
+		},
+		"project": {
+		  "type": "string"
+		},
+		"storageAccountName": {
             "type": "string",
             "metadata": {
                 "description": "The name of the storage account"
             }
+        },
+		"bronzeLayer": {
+            "type": "string"
+        },
+		"silverLayer": {
+            "type": "string"
+        },
+		"goldLayer": {
+            "type": "string"
         },
         "location": {
             "type": "string",
@@ -16,9 +31,12 @@
             }
         }
     },
+	"variables": {
+		"storageAccountName": "[concat(parameters('environment'), parameters('project'), parameters('storageAccountName'))]"
+    },
     "resources": [
         {
-              "name": "[parameters('storageAccountName')]",
+              "name": "[variables('storageAccountName')]",
               "type": "Microsoft.Storage/storageAccounts",
               "apiVersion": "2021-02-01",
               "sku": {
@@ -33,7 +51,42 @@
                 "owner":"data engineering",
                 "project":"lakehouse",
                 "environment":"production"
-              }
-            }
+              },
+			  "resources": [
+				{
+				  "name": "[concat('default/', parameters('bronzeLayer'))]",
+				  "type": "blobServices/containers",
+				  "apiVersion": "2019-06-01",
+				  "dependsOn": [
+					"[variables('storageAccountName')]"
+				  ],
+				  "properties": {
+					"publicAccess": "None"
+				  }
+				},
+				{
+				  "name": "[concat('default/', parameters('goldLayer'))]",
+				  "type": "blobServices/containers",
+				  "apiVersion": "2019-06-01",
+				  "dependsOn": [
+					"[variables('storageAccountName')]"
+				  ],
+				  "properties": {
+					"publicAccess": "None"
+				  }
+				},
+				{
+				  "name": "[concat('default/', parameters('silverLayer'))]",
+				  "type": "blobServices/containers",
+				  "apiVersion": "2019-06-01",
+				  "dependsOn": [
+					"[variables('storageAccountName')]"
+				  ],
+				  "properties": {
+					"publicAccess": "None"
+				  }
+				}
+			  ]
+        }
     ]
 }

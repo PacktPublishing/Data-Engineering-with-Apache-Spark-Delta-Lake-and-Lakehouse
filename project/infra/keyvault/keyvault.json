@@ -1,0 +1,55 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environment": {
+          "type": "string"
+		},
+		"project": {
+		  "type": "string"
+		},
+		"kvName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "tenantId": {
+            "type": "string",
+            "defaultValue": "[subscription().tenantId]"
+        },
+        "objectId": {
+            "type": "string",
+            "defaultValue": "9f14339a-cdf5-41e3-b43e-30a949b42dda"
+        }
+    },
+    "variables": {
+        "kvName": "[concat(parameters('environment'), '-', parameters('project'), '-', parameters('kvName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2019-09-01",
+            "name": "[variables('kvName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "Standard"
+                },
+            "tenantId": "[subscription().tenantId]",
+			"accessPolicies": [
+                    {
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "[parameters('objectId')]",
+                        "permissions": {
+                            "keys": [ "All" ],
+                            "secrets": [ "All" ]
+                          }
+                    }
+                ]
+            }
+        }
+    ]
+}

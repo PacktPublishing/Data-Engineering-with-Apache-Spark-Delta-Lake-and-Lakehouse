@@ -2,7 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "sqlAdministratorLogin": {
+    "environment": {
+      "type": "string"
+    },
+    "project": {
+      "type": "string"
+    },
+	"sqlAdministratorLogin": {
       "type": "string",
       "metadata": {
         "description": "The administrator username of the SQL Server."
@@ -31,11 +37,13 @@
   "variables": {
     "databaseEdition": "Basic",
     "databaseCollation": "SQL_Latin1_General_CP1_CI_AS",
-    "databaseServiceObjectiveName": "Basic"
+    "databaseServiceObjectiveName": "Basic",
+	"sqlServerName": "[concat(parameters('environment'), '-', parameters('project'), '-', parameters('sqlServerName'))]"
+	
   },
   "resources": [
     {
-      "name": "[parameters('sqlServerName')]",
+      "name": "[variables('sqlServerName')]",
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2020-02-02-preview",
       "location": "[parameters('location')]",
@@ -67,7 +75,7 @@
             "tier": "Standard"
           },
           "dependsOn": [
-            "[parameters('sqlServerName')]"
+            "[variables('sqlServerName')]"
           ]
         },
         {
@@ -80,20 +88,7 @@
             "startIpAddress": "0.0.0.0"
           },
           "dependsOn": [
-            "[parameters('sqlServerName')]"
-          ]
-        },
-        {
-          "name": "AllowMyIps",
-          "type": "firewallrules",
-          "apiVersion": "2020-02-02-preview",
-          "location": "[parameters('location')]",
-          "properties": {
-            "endIpAddress": "99.229.128.85",
-            "startIpAddress": "99.229.128.85"
-          },
-          "dependsOn": [
-            "[parameters('sqlServerName')]"
+            "[variables('sqlServerName')]"
           ]
         }
       ]
@@ -102,7 +97,7 @@
   "outputs": {
     "sqlServerFqdn": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.Sql/servers/', parameters('sqlServerName'))).fullyQualifiedDomainName]"
+      "value": "[reference(resourceId('Microsoft.Sql/servers/', variables('sqlServerName'))).fullyQualifiedDomainName]"
     },
     "databaseName": {
       "type": "string",

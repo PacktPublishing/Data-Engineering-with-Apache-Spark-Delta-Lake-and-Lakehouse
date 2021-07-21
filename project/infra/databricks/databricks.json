@@ -1,0 +1,42 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "environment": {
+          "type": "string"
+		},
+		"project": {
+		  "type": "string"
+		},
+		"databricksWorkspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the storage account"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "The location in which the resources should be deployed."
+            }
+        }
+    },
+    "variables": {
+        "managedResourceGroupName": "[format('databricks-rg-{0}-{1}', parameters('databricksWorkspaceName'), uniqueString(parameters('databricksWorkspaceName'), resourceGroup().id))]"
+    },
+    "resources": [
+    	{
+              "name": "[parameters('databricksWorkspaceName')]",
+              "type": "Microsoft.Databricks/workspaces",
+              "apiVersion": "2018-04-01",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "trial"
+              },
+              "properties": {
+                "managedResourceGroupId": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('managedResourceGroupName'))]"
+              }
+        }
+    ]
+}

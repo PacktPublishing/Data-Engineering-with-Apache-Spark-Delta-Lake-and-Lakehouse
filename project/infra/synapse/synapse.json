@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+         "environment": {
+          "type": "string"
+		},
+		"project": {
+		  "type": "string"
+		},
+		"synapseWorkspaceName": {
+          "type": "string",
+          "metadata": {
+            "description": "Synapse Workspace Name"
+          }
+        },
+        "synapseAdministratorLogin": {
+          "type": "string",
+          "metadata": {
+            "description": "The administrator username of the synapse"
+          }
+        },
+        "synapseAdministratorLoginPassword": {
+          "type": "securestring",
+          "metadata": {
+            "description": "The administrator password of the synapse"
+          }
+        },
+        "location": {
+          "type": "string",
+          "defaultValue": "[resourceGroup().location]",
+          "metadata": {
+            "description": "Location for all resources."
+          }    
+        },
+        "synapseStorageAccount": {
+          "type": "string",
+          "metadata": {
+            "description": "Storage Account for synapse"
+          }    
+        },
+        "synapseStorageAccountFilesystem": {
+          "type": "string",
+          "metadata": {
+            "description": "Gold Layer Storage Account filesystem for synapse"
+          }    
+        }
+    },
+    "variables": {
+		 "synapseWorkspaceName": "[concat(parameters('environment'), '-', parameters('project'), '-', parameters('synapseWorkspaceName'))]",
+		 "synapseStorageAccount": "[concat(parameters('environment'), parameters('project'), parameters('synapseStorageAccount'))]"
+    },
+    "resources": [
+        {
+          "name": "[variables('synapseWorkspaceName')]",
+          "type": "Microsoft.Synapse/workspaces",
+          "apiVersion": "2021-03-01",
+          "location": "[parameters('location')]",
+          "properties": {
+            "sqlAdministratorLoginPassword": "[parameters('synapseAdministratorLoginPassword')]",
+            "sqlAdministratorLogin": "[parameters('synapseAdministratorLogin')]",
+            "defaultDataLakeStorage": {
+              "accountUrl": "[concat('https://', parameters('synapseStorageAccount'), uniqueString(resourceGroup().id), '.dfs.core.windows.net')]",
+              "filesystem": "[parameters('synapseStorageAccountFilesystem')]"
+                }
+            },
+            "resources": [
+                {
+                  "type": "firewallrules",
+                  "apiVersion": "2019-06-01-preview",
+                  "name": "allowAll",
+                  "location": "[parameters('location')]",
+                  "dependsOn": [
+                    "[concat('Microsoft.Synapse/workspaces/', variables('synapseWorkspaceName'))]"
+                    ],
+                  "properties": {
+                    "startIpAddress": "0.0.0.0",
+                    "endIpAddress": "255.255.255.255"
+                  }
+                },
+                {
+                  "type": "firewallrules",
+                  "apiVersion": "2019-06-01-preview",
+                  "name": "AllowAllWindowsAzureIps",
+                  "location": "[parameters('location')]",
+                  "dependsOn": [
+                    "[concat('Microsoft.Synapse/workspaces/', variables('synapseWorkspaceName'))]"
+                    ],
+                  "properties": {
+                    "startIpAddress": "0.0.0.0",
+                    "endIpAddress": "0.0.0.0"
+                  }
+                },
+				{
+				  "type": "managedIdentitySqlControlSettings",
+				  "apiVersion": "2019-06-01-preview",
+				  "name": "default",
+				  "location": "[parameters('location')]",
+				  "dependsOn": [ "[variables('synapseWorkspaceName')]" ],
+				  "properties": {
+					"grantSqlControlToManagedIdentity": {
+					  "desiredState": "Enabled"
+					}
+					}
+				}
+            ],
+            "identity":{
+                "type": "SystemAssigned"
+            }
+		}
+	]
+}
