@@ -17,6 +17,7 @@
           "id": "/subscriptions/<subscription-id>/resourceGroups/elz_prod/providers/Microsoft.KeyVault/vaults/deploykvelz"
         },
         "secretName": "SQLPASSWORD"
+	  }
     },
     "location": {
       "value": "[resourceGroup().location]"
