@@ -13,7 +13,7 @@
       "metadata": {
         "description": "The administrator username of the SQL Server."
       }
-    }
+    },
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
