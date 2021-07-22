@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environment": {
+            "value": "prod"
+        },
+        "project": {
+            "value": "dlake"
+        },
+        "storageAccountName": {
+            "value": "elz"
+        },
+        "bronzeLayer": {
+            "value": "bronze"
+        },
+        "silverLayer": {
+            "value": "silver"
+        },
+        "goldLayer": {
+            "value": "gold"
+        },
+        "location": {
+            "value": "eastus2"
+        }
+    }
+}
