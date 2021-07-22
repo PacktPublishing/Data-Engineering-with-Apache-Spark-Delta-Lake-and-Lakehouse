@@ -23,11 +23,12 @@
         }
     },
     "variables": {
-        "managedResourceGroupName": "[format('databricks-rg-{0}-{1}', parameters('databricksWorkspaceName'), uniqueString(parameters('databricksWorkspaceName'), resourceGroup().id))]"
-    },
+	    "databricksWorkspaceName": "[concat(parameters('environment'), '-', parameters('project'), '-', parameters('databricksWorkspaceName'))]",
+        "managedResourceGroupName": "[format('databricks-rg-{0}-{1}', variables('databricksWorkspaceName'), uniqueString(parameters('databricksWorkspaceName'), resourceGroup().id))]"    
+		},
     "resources": [
     	{
-              "name": "[parameters('databricksWorkspaceName')]",
+              "name": "[variables('databricksWorkspaceName')]",
               "type": "Microsoft.Databricks/workspaces",
               "apiVersion": "2018-04-01",
               "location": "[parameters('location')]",
