@@ -2,30 +2,12 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "environment": {
-      "type": "string"
-    },
-    "project": {
-      "type": "string"
-    },
-	"sqlAdministratorLogin": {
-      "type": "string",
-      "metadata": {
-        "description": "The administrator username of the SQL Server."
-      }
-    },
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
       "metadata": {
-        "description": "Location for all resources."
+        "description": "The location where the resources will be deployed."
       }
-    },
-	"sqlServerName": {
-            "type": "string"   
-    },
-	"databaseName": {
-            "type": "string"   
     },
     "vaultName": {
       "type": "string",
@@ -33,10 +15,28 @@
         "description": "The name of the keyvault that contains the secret."
       }
     },
-    "secretName": {
+    "databaseName": {
       "type": "string",
       "metadata": {
-        "description": "The name of the secret."
+        "description": "The name of the Database"
+      }
+    },
+    "adminPasswordsecretName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Password secret."
+      }
+    },
+    "sqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the SQL Server."
+      }
+    },
+    "adminLoginUsersecretName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the LoginUser secret."
       }
     },
     "vaultResourceGroupName": {
@@ -53,81 +53,178 @@
       }
     }
   },
-  "variables": {
-    "databaseEdition": "Basic",
-    "databaseCollation": "SQL_Latin1_General_CP1_CI_AS",
-    "databaseServiceObjectiveName": "Basic",
-	"sqlServerName": "[concat(parameters('environment'), '-', parameters('project'), '-', parameters('sqlServerName'))]"
-	
-  },
   "resources": [
     {
-      "name": "[variables('sqlServerName')]",
-      "type": "Microsoft.Sql/servers",
-      "apiVersion": "2020-02-02-preview",
-      "location": "[parameters('location')]",
-      "tags": {
-        "displayName": "SqlServer"
-      },
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "dynamicSecret",
       "properties": {
-        "administratorLogin": "[parameters('sqlAdministratorLogin')]",
-		"administratorLoginPassword": {
+        "mode": "Incremental",
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "adminLoginUser": {
+              "type": "securestring"
+            },
+            "adminPassword": {
+              "type": "securestring"
+            },
+            "databaseCollation": {
+              "type": "string",
+              "minLength": 1,
+              "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+            },
+            "databaseName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Database"
+              }
+            },
+            "databaseEdition": {
+              "type": "string",
+              "defaultValue": "Basic",
+              "allowedValues": [
+                "Basic",
+                "Standard",
+                "Premium"
+              ]
+            },
+            "transparentDataEncryption": {
+              "type": "string",
+              "allowedValues": [
+                "Enabled",
+                "Disabled"
+              ],
+              "defaultValue": "Enabled",
+              "metadata": {
+                "description": "Enable or disable Transparent Data Encryption (TDE) for the database."
+              }
+            },
+            "databaseServiceObjectiveName": {
+              "type": "string",
+              "defaultValue": "Basic",
+              "allowedValues": [
+                "Basic",
+                "S0",
+                "S1",
+                "S2",
+                "P1",
+                "P2",
+                "P3"
+              ],
+              "metadata": {
+                "description": "Describes the performance level for Edition"
+              }
+            },
+            "location": {
+              "type": "string"
+            },
+            "sqlServerName": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "name": "[parameters('sqlServerName')]",
+              "type": "Microsoft.Sql/servers",
+              "apiVersion": "2019-06-01-preview",
+              "location": "[parameters('location')]",
+              "tags": {
+                "displayName": "SqlServer"
+              },
+              "properties": {
+                "administratorLogin": "[parameters('adminLoginUser')]",
+                "administratorLoginPassword": "[parameters('adminPassword')]",
+                "version": "12.0"
+              },
+              "resources": [
+                {
+                  "name": "[parameters('databaseName')]",
+                  "type": "databases",
+                  "apiVersion": "2019-06-01-preview",
+                  "location": "[parameters('location')]",
+                  "tags": {
+                    "displayName": "Database"
+                  },
+                  "properties": {
+                    "edition": "[parameters('databaseEdition')]",
+                    "collation": "[parameters('databaseCollation')]",
+                    "requestedServiceObjectiveName": "[parameters('databaseServiceObjectiveName')]"
+                  },
+                  "dependsOn": [
+                    "[parameters('sqlServerName')]"
+                  ],
+                  "resources": [
+                    {
+                      "comments": "Transparent Data Encryption",
+                      "name": "current",
+                      "type": "transparentDataEncryption",
+                      "apiVersion": "2014-04-01-preview",
+                      "properties": {
+                        "status": "[parameters('transparentDataEncryption')]"
+                      },
+                      "dependsOn": [
+                        "[parameters('databaseName')]"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "AllowAllMicrosoftAzureIps",
+                  "type": "firewallrules",
+                  "apiVersion": "2015-05-01-preview",
+                  "location": "[parameters('location')]",
+                  "properties": {
+                    "endIpAddress": "0.0.0.0",
+                    "startIpAddress": "0.0.0.0"
+                  },
+                  "dependsOn": [
+                    "[parameters('sqlServerName')]"
+                  ]
+                }
+              ]
+            }
+          ],
+          "outputs": {
+            "sqlFQDN": {
+              "type": "string",
+              "value": "[reference(parameters('sqlServerName')).fullyQualifiedDomainName]"
+            }
+          }
+        },
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "sqlServerName": {
+            "value": "[parameters('sqlServerName')]"
+          },
+          "databaseName": {
+            "value": "[parameters('databaseName')]"
+          },
+          "adminLoginUser": {
             "reference": {
               "keyVault": {
                 "id": "[resourceId(parameters('vaultSubscription'), parameters('vaultResourceGroupName'), 'Microsoft.KeyVault/vaults', parameters('vaultName'))]"
               },
-              "secretName": "[parameters('secretName')]"
+              "secretName": "[parameters('adminLoginUsersecretName')]"
             }
-        },
-        "version": "12.0",
-        "publicNetworkAccess": "Enabled"
-      },
-      "resources": [
-        {
-          "name": "[parameters('databaseName')]",
-          "type": "databases",
-          "apiVersion": "2020-02-02-preview",
-          "location": "[parameters('location')]",
-          "tags": {
-            "displayName": "Database"
           },
-          "properties": {
-            "edition": "[variables('databaseEdition')]",
-            "collation": "[variables('databaseCollation')]",
-            "requestedServiceObjectiveName": "[variables('databaseServiceObjectiveName')]"
-          },
-		  "sku": {
-            "name": "Standard",
-            "tier": "Standard"
-          },
-          "dependsOn": [
-            "[variables('sqlServerName')]"
-          ]
-        },
-        {
-          "name": "AllowAllMicrosoftAzureIps",
-          "type": "firewallrules",
-          "apiVersion": "2020-02-02-preview",
-          "location": "[parameters('location')]",
-          "properties": {
-            "endIpAddress": "0.0.0.0",
-            "startIpAddress": "0.0.0.0"
-          },
-          "dependsOn": [
-            "[variables('sqlServerName')]"
-          ]
+          "adminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "[resourceId(parameters('vaultSubscription'), parameters('vaultResourceGroupName'), 'Microsoft.KeyVault/vaults', parameters('vaultName'))]"
+              },
+              "secretName": "[parameters('adminPasswordsecretName')]"
+            }
+          }
         }
-      ]
+      }
     }
   ],
-  "outputs": {
-    "sqlServerFqdn": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Sql/servers/', variables('sqlServerName'))).fullyQualifiedDomainName]"
-    },
-    "databaseName": {
-      "type": "string",
-      "value": "[parameters('databaseName')]"
-    }
-  }
+  "outputs": {}
 }
