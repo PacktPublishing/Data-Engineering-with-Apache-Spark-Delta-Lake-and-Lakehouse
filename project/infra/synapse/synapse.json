@@ -11,43 +11,36 @@
     },
     "vaultName": {
       "type": "string",
-	  "defaultValue": "deploykvelz",
       "metadata": {
         "description": "The name of the keyvault that contains the secret."
       }
     },
     "synapseWorkspaceName": {
       "type": "string",
-	  "defaultValue": "elzsyn",
       "metadata": {
         "description": "The name of the Database"
       }
     },
     "synapseStorageAccount": {
       "type": "string",
-	  "defaultValue": "elz"
     },
     "synapseStorageAccountFilesystem": {
       "type": "string",
-	  "defaultValue": "gold"
     },
     "adminPasswordsecretName": {
       "type": "string",
-	  "defaultValue": "SQLPASSWORD",
       "metadata": {
         "description": "The name of the Password secret."
       }
     },
     "adminLoginUsersecretName": {
       "type": "string",
-	  "defaultValue": "SQLUSER",
       "metadata": {
         "description": "The name of the LoginUser secret."
       }
     },
     "vaultResourceGroupName": {
       "type": "string",
-	  "defaultValue": "elz_prod",
       "metadata": {
         "description": "The name of the resource group that contains the keyvault."
       }
