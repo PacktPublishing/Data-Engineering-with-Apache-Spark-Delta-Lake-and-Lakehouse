@@ -1,6 +1,6 @@
 ####################################################################################################################################################
-Usage:
-$ sh ~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra/electroniz_isc.sh
+# Usage:
+# $ sh ~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra/electroniz_isc.sh
 ####################################################################################################################################################
 
 
