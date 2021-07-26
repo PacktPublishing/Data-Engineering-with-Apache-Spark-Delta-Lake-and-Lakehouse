@@ -41,7 +41,7 @@ echo "End creation of Resource group: $RESOURCEGROUPNAME"
 echo "Start creation of Lakehouse_Storage_Account"
 
 TEMPLATE_FILE=$TEMPLATE_FILE_PATH/storage_accounts/storage_accounts.json
-PARAMETERS_FILE=$PARAMETERS_FILE_PATH/storage_accounts/storage_accounts_parameters.json
+PARAMETERS_FILE=$PARAMETERS_FILE_PATH/storage_accounts_parameters.json
 az deployment group create --name Lakehouse_Storage_Account --resource-group $RESOURCEGROUPNAME --template-file $TEMPLATE_FILE --parameters $PARAMETERS_FILE
 
 echo "End creation of Lakehouse_Storage_Account"
@@ -52,7 +52,7 @@ echo "End creation of Lakehouse_Storage_Account"
 echo "Start creation of Stores_Azure_SQL_Database"
 
 TEMPLATE_FILE=$TEMPLATE_FILE_PATH/azure_sql/azure_sql.json
-PARAMETERS_FILE=$PARAMETERS_FILE_PATH/azure_sql/azure_sql_parameters.json
+PARAMETERS_FILE=$PARAMETERS_FILE_PATH/azure_sql_parameters.json
 az deployment group create --name Stores_Azure_SQL_Database --resource-group $RESOURCEGROUPNAME --template-file $TEMPLATE_FILE --parameters $PARAMETERS_FILE 
 
 echo "End creation of Stores_Azure_SQL_Database"
@@ -63,7 +63,7 @@ echo "End creation of Stores_Azure_SQL_Database"
 echo "Start creation of Lakehouse_Event_Hub"
 
 TEMPLATE_FILE=$TEMPLATE_FILE_PATH/event_hubs/event_hub.json
-PARAMETERS_FILE=$PARAMETERS_FILE_PATH/event_hubs/event_hub_parameters.json
+PARAMETERS_FILE=$PARAMETERS_FILE_PATH/event_hub_parameters.json
 az deployment group create --name Lakehouse_Event_Hub --resource-group $RESOURCEGROUPNAME --template-file $TEMPLATE_FILE --parameters $PARAMETERS_FILE 
 
 echo "End creation of Lakehouse_Event_Hub"
@@ -74,7 +74,7 @@ echo "End creation of Lakehouse_Event_Hub"
 echo "Start creation of Lakehouse_Databricks"
 
 TEMPLATE_FILE=$TEMPLATE_FILE_PATH/databricks/databricks.json
-PARAMETERS_FILE=$PARAMETERS_FILE_PATH/databricks/databricks_parameters.json
+PARAMETERS_FILE=$PARAMETERS_FILE_PATH/databricks_parameters.json
 az deployment group create --name Lakehouse_Databricks --resource-group $RESOURCEGROUPNAME --template-file $TEMPLATE_FILE --parameters $PARAMETERS_FILE
 
 echo "End creation of Lakehouse_Databricks"
@@ -85,7 +85,7 @@ echo "End creation of Lakehouse_Databricks"
 echo "Start creation of Lakehouse_DataFactory"
 
 TEMPLATE_FILE=$TEMPLATE_FILE_PATH/data_factory/data_factory.json
-PARAMETERS_FILE=$PARAMETERS_FILE_PATH/data_factory/data_factory_parameters.json
+PARAMETERS_FILE=$PARAMETERS_FILE_PATH/data_factory_parameters.json
 az deployment group create --name Lakehouse_DataFactory --resource-group $RESOURCEGROUPNAME --template-file $TEMPLATE_FILE --parameters $PARAMETERS_FILE
 
 echo "End creation of Lakehouse_DataFactory"
@@ -95,7 +95,7 @@ echo "End creation of Lakehouse_DataFactory"
 echo "Start creation of Lakehouse_Synapse"
 
 TEMPLATE_FILE=$TEMPLATE_FILE_PATH/synapse/synapse.json
-PARAMETERS_FILE=$PARAMETERS_FILE_PATH/synapse/synapse_parameters.json
+PARAMETERS_FILE=$PARAMETERS_FILE_PATH/synapse_parameters.json
 az deployment group create --name Lakehouse_Synapse --resource-group $RESOURCEGROUPNAME --template-file $TEMPLATE_FILE --parameters $PARAMETERS_FILE
 
 echo "End creation of Lakehouse_Synapse"
