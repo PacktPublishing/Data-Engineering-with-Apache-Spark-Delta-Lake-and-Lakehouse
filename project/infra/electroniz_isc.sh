@@ -1,17 +1,29 @@
 ####################################################################################################################################################
 # Usage:
-# $ sh ~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra/electroniz_isc.sh
+# $ sh electroniz_isc.sh IACRESOURCEGROUPNAME=elz_iac RESOURCEGROUPNAME=elz_prod LOCATION=eastus \
+#   FILE_PATH=~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra
 ####################################################################################################################################################
 
 
 ####################################################################################################################################################
-# Edit this section for desired names and settings for Azure resources
+# Get arguments
 
-IACRESOURCEGROUPNAME=$1
-RESOURCEGROUPNAME=$2
-LOCATION=$3
-FILE_PATH=$4
+for ARGUMENT in "$@"
+do
 
+    KEY=$(echo $ARGUMENT | cut -f1 -d=)
+    VALUE=$(echo $ARGUMENT | cut -f2 -d=)
+
+    case "$KEY" in
+            IACRESOURCEGROUPNAME)              IACRESOURCEGROUPNAME=${VALUE} ;;
+            RESOURCEGROUPNAME)                 RESOURCEGROUPNAME=${VALUE} ;;
+            LOCATION)                          LOCATION=${VALUE} ;;
+            FILE_PATH)                         FILE_PATH=${VALUE} ;;
+            *)
+    esac
+
+
+done
 ####################################################################################################################################################
 
 ####################################################################################################################################################

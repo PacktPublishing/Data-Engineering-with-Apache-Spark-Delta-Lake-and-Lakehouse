@@ -13,7 +13,7 @@
    },
     "adminPasswordsecretName":{
       "value":"SQLPASSWORD"
-   }
+   },
     "adminLoginUsersecretName":{
       "value":"SQLUSER"
    },
