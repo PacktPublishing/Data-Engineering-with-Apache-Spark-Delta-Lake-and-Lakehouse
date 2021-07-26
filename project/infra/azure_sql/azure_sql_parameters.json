@@ -1,14 +1,20 @@
 {
-   "sqlAdministratorLogin":{
-      "value":"trainingsql"
-   },
-   "sqlAdministratorLoginPassword":{
-      "value":"password@123"
-   },
-   "sqlServerName":{
-      "value":"salesdb100"
+   "vaultName":{
+      "value":"deploykvelz"
    },
    "databaseName":{
       "value":"salesdb"
+   },
+    "adminPasswordsecretName":{
+      "value":"SQLPASSWORD"
+   },
+    "sqlServerName":{
+      "value":"elzsql"
+   },
+    "adminLoginUsersecretName":{
+      "value":"SQLUSER"
+   },
+    "vaultResourceGroupName":{
+      "value":"elz_iac"
    }
 }
