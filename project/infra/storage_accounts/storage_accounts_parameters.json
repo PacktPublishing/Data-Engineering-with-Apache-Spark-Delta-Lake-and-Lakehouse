@@ -1,4 +1,10 @@
 {
+   "environment":{
+      "value":"prod"
+   },
+   "project":{
+      "value":"dlake"
+   },
    "storageAccountName":{
       "value":"electronizlakehouse"
    },
