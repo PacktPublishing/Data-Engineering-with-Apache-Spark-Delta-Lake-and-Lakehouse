@@ -1,0 +1,14 @@
+{
+   "sqlAdministratorLogin":{
+      "value":"trainingsql"
+   },
+   "sqlAdministratorLoginPassword":{
+      "value":"password@123"
+   },
+   "sqlServerName":{
+      "value":"salesdb100"
+   },
+   "databaseName":{
+      "value":"salesdb"
+   }
+}

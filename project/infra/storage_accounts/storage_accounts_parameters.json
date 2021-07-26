@@ -1,0 +1,17 @@
+{
+   "storageAccountName":{
+      "value":"electronizlakehouse"
+   },
+   "bronzeLayer":{
+      "value":"bronze"
+   },
+   "silverLayer":{
+      "value":"silver"
+   },
+   "goldLayer":{
+      "value":"gold"
+   },
+   "location":{
+      "value":"eastus"
+   }
+}
