@@ -1,0 +1,429 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+          "type": "string",
+          "defaultValue": "[resourceGroup().location]",
+          "metadata": {
+            "description": "Location for all resources."
+          }    
+        },
+        "synapseStorageAccount": {
+          "type": "string",
+          "metadata": {
+            "description": "Storage Account for synapse"
+          }    
+        },
+        "synapseStorageAccountFilesystem": {
+          "type": "string",
+          "metadata": {
+            "description": "Gold Layer Storage Account filesystem for synapse "
+          }    
+        },
+        "sasProperties": {
+          "type": "object",
+          "defaultValue": {
+                "signedServices": "bfqt",
+                "signedPermission": "rwdlacup",
+                "signedExpiry": "2021-08-01T00:00:01Z",
+                "signedResourceTypes": "sco"
+            }   
+        },
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "dfdatafactorytraining"
+        },
+        "SynapseServerless_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'Synapse Serverless'"
+        },
+        "Curation_Spark_Cluster_accessToken": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accessToken' of 'Curation Spark Cluster'"
+        },
+        "salesdbsource_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'salesdbsource'"
+        },
+        "websitetrackinglogs_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'websitetrackinglogs'"
+        },
+        "traininglakehouse_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://proddlakeelz.dfs.core.windows.net"
+        },
+        "httpsource_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/mkukreja1/datafenceazure/master/datafactory/prep/iplocation/IP2LOCATION-LITE-DB1.CSV"
+        },
+        "restsource_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://free.currconv.com/api/v7/convert?"
+        }
+    },
+    "variables": {
+         "dataLakeStorageAccountUrl": "[concat('https://', parameters('synapseStorageAccount'), '.dfs.core.windows.net')]",
+         "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('factoryName')]",
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "properties": {},
+			"identity": {
+            "type": "SystemAssigned"
+             },
+            "resources": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Synapse Serverless')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+             "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                  "typeProperties": {
+                          "connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=elzsyn-ondemand.sql.azuresynapse.net;initial catalog=salesdb;user id=salesadmin;server=tcp:elzsyn-ondemand.sql.azuresynapse.net,1433;persist security info=False;multipleactiveresultsets=False;trustservercertificate=False",
+                          "encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRGREFUQUZBQ1RPUllUUkFJTklOR183YzQ4ZmE4Yy0xNzdjLTQ4N2UtYTAzNC02ZmEyYzk3NGU5MDciDQp9"
+                   }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/traininglakehouse')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('traininglakehouse_properties_typeProperties_url')]",
+                    "accountKey": {
+                        "type": "SecureString",
+                        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('synapseStorageAccount')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/gold_data')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "traininglakehouse",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "Binary",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "folderPath": "external",
+                        "fileSystem": "gold"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/traininglakehouse')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Curation Spark Cluster')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureDatabricks",
+                "typeProperties": {
+                    "domain": "https://adb-5753452913795036.16.azuredatabricks.net",
+                    "accessToken": {
+                        "type": "SecureString",
+                        "value": "[parameters('Curation_Spark_Cluster_accessToken')]"
+                    },
+                    "existingClusterId": "<DataBricksclusterID>"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/salesdbsource')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                  "typeProperties": {
+                          "connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=elzsql.database.windows.net;initial catalog=salesdb;user id=salesadmin;Password=password@1234;server=tcp:elzsql.database.windows.net,1433;persist security info=False;multipleactiveresultsets=False;trustservercertificate=False"                   }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/salesdbds')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "salesdbsource",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [],
+                "typeProperties": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/salesdbsource')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/SalesDelimitedText')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "traininglakehouse",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "FileExt": {
+                        "type": "string",
+                        "defaultValue": "csv"
+                    },
+                    "FileTime": {
+                        "type": "string",
+                        "defaultValue": "@pipeline().TriggerTime"
+                    }
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "@concat(dataset().FileTime,'.',dataset().FileExt)",
+                        "folderPath": "sales/@{activity('Lookup Old Watermark').output.firstRow.table_name}/@{formatDateTime(utcnow(),'yyyy')}/@{formatDateTime(utcnow(),'MM')}/@{formatDateTime(utcnow(),'dd')}/@{formatDateTime(utcnow(),'HH')}",
+                        "fileSystem": "bronze"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/traininglakehouse')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/httpsource')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "HttpServer",
+                "typeProperties": {
+                    "url": "[parameters('httpsource_properties_typeProperties_url')]",
+                    "enableServerCertificateValidation": true,
+                    "authenticationType": "Anonymous"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/GeoDelimitedTextSource')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "httpsource",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "HttpServerLocation"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/httpsource')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/GeoDelimitedTextSync')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "traininglakehouse",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "folderPath": "geolocation/@{formatDateTime(utcnow(),'yyyy')}/@{formatDateTime(utcnow(),'MM')}/@{formatDateTime(utcnow(),'dd')}/@{formatDateTime(utcnow(),'HH')}",
+                        "fileSystem": "bronze"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/traininglakehouse')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/restsource')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "RestService",
+                "typeProperties": {
+                    "url": "[parameters('restsource_properties_typeProperties_url')]",
+                    "enableServerCertificateValidation": true,
+                    "authenticationType": "Anonymous"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/RestResource1')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "restsource",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "RestResource",
+                "typeProperties": {
+                    "relativeUrl": "convert?q=USD_@{item().Currency}&compact=ultra&apiKey=@{activity('Get Secret').output.value}"
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/restsource')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CurrencyDelimitedText')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "traininglakehouse",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "folderPath": "currency/@{item().Currency}/@{formatDateTime(utcnow(),'yyyy')}/@{formatDateTime(utcnow(),'MM')}/@{formatDateTime(utcnow(),'dd')}/@{formatDateTime(utcnow(),'HH')}",
+                        "fileSystem": "bronze"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/traininglakehouse')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/websitetrackinglogs')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobStorage",
+                "typeProperties": {
+                    "connectionString": "DefaultEndpointsProtocol=https;AccountName=dfecommercetracking;EndpointSuffix=core.windows.net;",
+			     "encryptedCredential": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('synapseStorageAccount')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TrackingJSON')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "websitetrackinglogs",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "Json",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "container": "ecommercelogs1234"
+                    }
+                },
+                "schema": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/websitetrackinglogs')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TrackingJSONSync')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "traininglakehouse",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "Json",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "folderPath": "logs/@{formatDateTime(utcnow(),'yyyy')}/@{formatDateTime(utcnow(),'MM')}/@{formatDateTime(utcnow(),'dd')}/@{formatDateTime(utcnow(),'HH')}",
+                        "fileSystem": "bronze"
+                    }
+                },
+                "schema": {}
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/traininglakehouse')]"
+            ]
+        }
+    ]
+}

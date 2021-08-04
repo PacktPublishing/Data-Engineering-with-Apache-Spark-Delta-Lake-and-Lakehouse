@@ -1,0 +1,185 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+          "type": "string",
+          "defaultValue": "[resourceGroup().location]",
+          "metadata": {
+            "description": "Location for all resources."
+          }    
+        },
+        "sasKey": {
+          "type": "string"
+        },
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name"
+        },
+        "databricksName": {
+            "type": "string",
+            "metadata": "Data Factory name"
+        },
+        "databricksCluster": {
+            "type": "string",
+            "metadata": "Data Factory name"
+        },
+        "Curation_Spark_Cluster_accessToken": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accessToken' of 'Curation Spark Cluster'"
+        }
+    },
+    "variables": {
+         "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('factoryName')]",
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "properties": {},
+			"identity": {
+            "type": "SystemAssigned"
+             },
+            "resources": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/electroniz_curation_pipeline')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "This pipeline will curate data for sales database, currency conversion, geo-location and ecommerce website tracking logs by fetching from th bronze layer and saving it in the silver layer.",
+                "activities": [
+                    {
+                        "name": "Get Secret",
+                        "type": "WebActivity",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "url": "https://dftrainingkv100kv.vault.azure.net/dfADLSKEY/12345678?api-version=7.0",
+                            "method": "GET",
+                            "headers": {},
+                            "authentication": {
+                                "type": "MSI",
+                                "resource": "https://vault.azure.net"
+                            }
+                        }
+                    },
+                    {
+                        "name": "Run Curation Notebook",
+                        "type": "DatabricksNotebook",
+                        "dependsOn": [
+                            {
+                                "activity": "Get Secret",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "notebookPath": "electroniz_curation_notebook ",
+                            "baseParameters": {
+                                "STORAGE_ACCOUNT": "@pipeline().parameters.STORAGE_ACCOUNT",
+                                "BRONZE_LAYER_NAMESPACE": "@pipeline().parameters.BRONZE_LAYER_NAMESPACE",
+                                "SILVER_LAYER_NAMESPACE": "@pipeline().parameters.SILVER_LAYER_NAMESPACE",
+                                "STORE_SALES_FOLDER": "@pipeline().parameters.STORE_SALES_FOLDER",
+                                "ADLS_FOLDER": "@pipeline().parameters.ADLS_FOLDER",
+                                "TABLE_LIST": "@pipeline().parameters.TABLE_LIST",
+                                "CURRENCY_LIST": "@pipeline().parameters.CURRENCY_LIST",
+                                "CURRENCY_FOLDER": "@pipeline().parameters.CURRENCY_FOLDER",
+                                "GEOLOCATION_FOLDER": "@pipeline().parameters.GEOLOCATION_FOLDER",
+                                "LOGS_FOLDER": "@pipeline().parameters.LOGS_FOLDER",
+                                "ECOMM_FOLDER": "@pipeline().parameters.ECOMM_FOLDER",
+                                "ADLS_KEY": "@activity('Get Secret').output.value"
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "Curation Spark Cluster",
+                            "type": "LinkedServiceReference"
+                        }
+                    }
+                ],
+                "parameters": {
+                    "STORAGE_ACCOUNT": {
+                        "type": "string"
+                    },
+                    "BRONZE_LAYER_NAMESPACE": {
+                        "type": "string"
+                    },
+                    "SILVER_LAYER_NAMESPACE": {
+                        "type": "string"
+                    },
+                    "STORE_SALES_FOLDER": {
+                        "type": "string"
+                    },
+                    "ADLS_FOLDER": {
+                        "type": "string"
+                    },
+                    "TABLE_LIST": {
+                        "type": "string"
+                    },
+                    "CURRENCY_LIST": {
+                        "type": "string"
+                    },
+                    "CURRENCY_FOLDER": {
+                        "type": "string"
+                    },
+                    "GEOLOCATION_FOLDER": {
+                        "type": "string"
+                    },
+                    "LOGS_FOLDER": {
+                        "type": "string"
+                    },
+                    "ECOMM_FOLDER": {
+                        "type": "string"
+                    }
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]",
+                "[concat(variables('factoryId'), '/linkedServices/Curation Spark Cluster')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/Curation Spark Cluster')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureDatabricks",
+                "typeProperties": {
+                    "domain": "https://adb-7285613526976736.16.azuredatabricks.net",
+                    "accessToken": {
+                        "type": "SecureString",
+                        "value": "[parameters('Curation_Spark_Cluster_accessToken')]"
+                    },
+                    "existingClusterId": "<DataBricksclusterID>"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', parameters('factoryName'))]"
+            ]
+        }
+       
+       
+    
+     
+    ]
+}

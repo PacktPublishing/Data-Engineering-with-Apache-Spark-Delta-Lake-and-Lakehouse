@@ -1,8 +1,8 @@
 ####################################################################################################################################################
 # Usage:
 # $ sh ~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra/electroniz_isc.sh IACRESOURCEGROUPNAME=elz_iac RESOURCEGROUPNAME=elz_prod LOCATION=eastus \
-#   TEMPLATE_FILE_PATH=~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra \
-#   PARAMETERS_FILE_PATH=~/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra/parameters/prod
+#   TEMPLATE_FILE_PATH=<HOME_DIR>/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra \
+#   PARAMETERS_FILE_PATH=<HOME_DIR>/Data-Engineering-with-Apache-Spark-Delta-Lake-and-Lakehouse/project/infra/parameters/prod
 ####################################################################################################################################################
 
 
