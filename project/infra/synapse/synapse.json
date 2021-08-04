@@ -22,10 +22,10 @@
       }
     },
     "synapseStorageAccount": {
-      "type": "string",
+      "type": "string"
     },
     "synapseStorageAccountFilesystem": {
-      "type": "string",
+      "type": "string"
     },
     "adminPasswordsecretName": {
       "type": "string",
@@ -84,7 +84,7 @@
                 "description": "The name of the Database"
               }
             },
-			"synapseStorageAccount": {
+                        "synapseStorageAccount": {
               "type": "string"
             },
             "synapseStorageAccountFilesystem": {
@@ -132,16 +132,16 @@
           },
           "resources": [
             {
-			  "name": "[parameters('synapseWorkspaceName')]",
-			  "type": "Microsoft.Synapse/workspaces",
-			  "apiVersion": "2021-03-01",
-			  "location": "[parameters('location')]",
-			  "properties": {
-				"sqlAdministratorLoginPassword": "[parameters('adminPassword')]",
-				"sqlAdministratorLogin": "[parameters('adminLoginUser')]",
-				"defaultDataLakeStorage": {
-				  "accountUrl": "[concat('https://', parameters('synapseStorageAccount'), uniqueString(resourceGroup().id), '.dfs.core.windows.net')]",
-				  "filesystem": "[parameters('synapseStorageAccountFilesystem')]"
+                          "name": "[parameters('synapseWorkspaceName')]",
+                          "type": "Microsoft.Synapse/workspaces",
+                          "apiVersion": "2021-03-01",
+                          "location": "[parameters('location')]",
+                          "properties": {
+                                "sqlAdministratorLoginPassword": "[parameters('adminPassword')]",
+                                "sqlAdministratorLogin": "[parameters('adminLoginUser')]",
+                                "defaultDataLakeStorage": {
+                                  "accountUrl": "[concat('https://', parameters('synapseStorageAccount'), uniqueString(resourceGroup().id), '.dfs.core.windows.net')]",
+                                  "filesystem": "[parameters('synapseStorageAccountFilesystem')]"
                 }
             },
             "resources": [
@@ -171,23 +171,23 @@
                     "endIpAddress": "0.0.0.0"
                   }
                 },
-				{
-				  "type": "managedIdentitySqlControlSettings",
-				  "apiVersion": "2019-06-01-preview",
-				  "name": "default",
-				  "location": "[parameters('location')]",
-				  "dependsOn": [ "[parameters('synapseWorkspaceName')]" ],
-				  "properties": {
-					"grantSqlControlToManagedIdentity": {
-					  "desiredState": "Enabled"
-					}
-					}
-				}
+                                {
+                                  "type": "managedIdentitySqlControlSettings",
+                                  "apiVersion": "2019-06-01-preview",
+                                  "name": "default",
+                                  "location": "[parameters('location')]",
+                                  "dependsOn": [ "[parameters('synapseWorkspaceName')]" ],
+                                  "properties": {
+                                        "grantSqlControlToManagedIdentity": {
+                                          "desiredState": "Enabled"
+                                        }
+                                        }
+                                }
             ],
             "identity":{
                 "type": "SystemAssigned"
             }
-		}
+                }
           ]
         },
         "parameters": {
@@ -197,12 +197,12 @@
           "synapseWorkspaceName": {
             "value": "[parameters('synapseWorkspaceName')]"
           },
-		  "synapseStorageAccount": {
+                  "synapseStorageAccount": {
             "value": "[parameters('synapseStorageAccount')]"
-		  },
-		  "synapseStorageAccountFilesystem": {
-			"value": "[parameters('synapseStorageAccountFilesystem')]"
-		  },
+                  },
+                  "synapseStorageAccountFilesystem": {
+                        "value": "[parameters('synapseStorageAccountFilesystem')]"
+                  },
           "adminLoginUser": {
             "reference": {
               "keyVault": {
