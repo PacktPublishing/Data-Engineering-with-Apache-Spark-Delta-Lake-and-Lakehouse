@@ -1,34 +1,29 @@
-#trigger:
-#  branches:
-#    include:
-#    - main
-#    - code/*
-#  paths:
-#    include:
-#    - code/*
-
 trigger:
-# - master
-- azure-pipelines
+  branches:
+    include:
+    - main
+    - project/cicd/*
+  paths:
+    include:
+    - project/cicd/*
 
 variables:
   - group: 'electroniz_code_variables'
 
 stages:
 
-#  - stage: Lakehouse_Database_Scripts
-#    jobs: 
-#      - job: DeployDatabaseScripts
-#        pool:
-#          vmImage: ubuntu-latest
-#        steps:
-#        - task: CmdLine@1
-#          displayName: Run Sqlcmd
-#          inputs:
-#            filename: sqlcmd
-#            arguments: '-S $(SQL_CON_STRING) -U $(SQL_USERNAME) -P $(SQL_PASSWORD) -d $(SQL_DATABASE) -i project/prep/stores/sql/history/storedb_history.sql'
-
-                    
+  - stage: Lakehouse_Database_Scripts
+    jobs: 
+      - job: DeployDatabaseScripts
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+        - task: CmdLine@1
+          displayName: Run Sqlcmd
+          inputs:
+            filename: sqlcmd
+            arguments: '-S $(SQL_CON_STRING) -U $(SQL_USERNAME) -P $(SQL_PASSWORD) -d $(SQL_DATABASE) -i project/prep/stores/sql/history/storedb_history.sql'
+                   
   - stage: Lakehouse_Linked_services
     jobs: 
       - job: DeployLinkedServices
@@ -44,7 +39,7 @@ stages:
             resourceGroupName: '$(RESOURCE_GROUP)'
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
-            csmFile: 'code/electroniz_linked_services.json'
+            csmFile: 'project/cicd/electroniz_linked_services.json'
             overrideParameters: '-factoryName $(DATAFACTORY_NAME) -synapseStorageAccount $(LAKEHOUSE_STORAGE_ACCOUNT) -synapseStorageAccountFilesystem  $(LAKEHOUSE_GOLD_LAYER) -synapseStorageAccount $(LAKEHOUSE_STORAGE_ACCOUNT) -SynapseServerless_connectionString "$(SYNAPSE_CON_STRING)" -Curation_Spark_Cluster_accessToken "$(SPARK_CLUSTER_TOKEN)" -salesdbsource_connectionString "$(SQL_CON_STRING)" -websitetrackinglogs_connectionString "$(WEBSITE_LOGS_CON_STRING)"'
             deploymentMode: 'Incremental'
             deploymentName: 'dataFactoryDeployment'
@@ -64,7 +59,7 @@ stages:
             resourceGroupName: '$(RESOURCE_GROUP)'
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
-            csmFile: 'code/electroniz_batch_ingestion_pipeline.json'
+            csmFile: 'project/cicd/electroniz_batch_ingestion_pipeline.json'
             overrideParameters: '-factoryName $(DATAFACTORY_NAME) -salesdbsource $(LAKEHOUSE_SALESDBSOURCE) -httpsource $(LAKEHOUSE_HTTPSOURCE) -traininglakehouse $(LAKEHOUSE_SOURCE) -websitetrackinglogs $(LAKEHOUSE_WEBTRACKING)  -restsource $(LAKEHOUSE_RESTSOURCE)'
             deploymentMode: 'Incremental'
             deploymentName: 'dataFactoryDeployment'
@@ -84,7 +79,7 @@ stages:
             resourceGroupName: '$(RESOURCE_GROUP)'
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
-            csmFile: 'code/electroniz_batch_curation_pipeline.json'
+            csmFile: 'project/cicd/electroniz_batch_curation_pipeline.json'
             overrideParameters: '-factoryName $(DATAFACTORY_NAME) -Curation_Spark_Cluster_accessToken "$(SPARK_CLUSTER_TOKEN)" -sasKey "$(ADLS_SECRET)" -databricksName "$(DATABRICKS_NAME)" -databricksCluster "$(DATABRICKS_CLUSTER)"'
             deploymentMode: 'Incremental'
             deploymentName: 'dataFactoryDeployment'
@@ -104,7 +99,7 @@ stages:
             resourceGroupName: '$(RESOURCE_GROUP)'
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
-            csmFile: 'code/electroniz_batch_aggregation_pipeline.json'
+            csmFile: 'project/cicd/electroniz_batch_aggregation_pipeline.json'
             overrideParameters: '-SynapseServerless_connectionString "$(SYNAPSE_CON_STRING)" -Curation_Spark_Cluster_accessToken "$(SPARK_CLUSTER_TOKEN)" -salesdbsource_connectionString "$(SQL_CON_STRING)" -websitetrackinglogs_connectionString "$(LAKEHOUSE_WEBTRACKING)"'
             deploymentMode: 'Incremental'
             deploymentName: 'dataFactoryDeployment'
@@ -124,9 +119,8 @@ stages:
             resourceGroupName: '$(RESOURCE_GROUP)'
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
-            csmFile: 'code/electroniz_master_pipeline.json'
+            csmFile: 'project/cicd/electroniz_master_pipeline.json'
             overrideParameters: '-factoryName $(DATAFACTORY_NAME)'
             deploymentMode: 'Incremental'
             deploymentName: 'dataFactoryDeployment'
           
-            

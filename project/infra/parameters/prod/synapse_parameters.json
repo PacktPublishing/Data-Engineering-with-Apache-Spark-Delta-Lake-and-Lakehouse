@@ -18,7 +18,7 @@
       "value":"SQLUSER"
    },
     "vaultResourceGroupName":{
-      "value":"elz_iac"
+      "value":"elz_prod"
    }
 }
 

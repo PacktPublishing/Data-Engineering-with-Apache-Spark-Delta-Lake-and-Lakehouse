@@ -23,7 +23,7 @@ stages:
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
             csmFile: 'project/infra/azure_sql/azure_sql.json'
-            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -sqlAdministratorLogin $(SQL_USERNAME) -sqlAdministratorLoginPassword $(SQL_PASSWORD) -sqlServerName $(SQL_SERVERNAME) -databaseName $(SQL_DB_NAME)'
+            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -vaultName $(KEY_VAULT_NAME) -databaseName $(SQL_DB_NAME) -adminPasswordsecretName $(SQL_PASSWORD_SECRET) -sqlServerName $(SQL_SERVERNAME) -adminLoginUsersecretName $(SQL_USERNAME_SECRET) -vaultResourceGroupName $(KEY_VAULT_RESOURCE_GROUP)'
             deploymentMode: 'Incremental'
             deploymentName: 'sql'  
 
@@ -105,27 +105,7 @@ stages:
             csmFile: 'project/infra/data_factory/data_factory.json'
             overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -factoryName $(DATAFACTORY_NAME)'
             deploymentMode: 'Incremental'
-            deploymentName: 'dataFactoryDeployment'
-            
-  - stage: Lakehouse_KeyVault
-    jobs: 
-      - job: DeployKeyVault
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-        - task: AzureResourceManagerTemplateDeployment@3
-          inputs:
-            deploymentScope: 'Resource Group'
-            azureResourceManagerConnection: '$(SERVICE_CONNECTION)'
-            subscriptionId: '$(SUBSCRIPTION_ID)'
-            action: 'Create Or Update Resource Group'
-            resourceGroupName: '$(RESOURCE_GROUP)'
-            location: '$(REGION)'
-            templateLocation: 'Linked artifact'
-            csmFile: 'project/infra/keyvault/keyvault.json'
-            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT)  -kvName $(LAKEHOUSE_KEYSTORE_NAME)'
-            deploymentMode: 'Incremental'
-            deploymentName: 'keyvault'
+            deploymentName: 'dataFactoryDeployment'           
             
   - stage: Lakehouse_Synapse
     jobs: 
@@ -143,6 +123,6 @@ stages:
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
             csmFile: 'project/infra/synapse/synapse.json'
-            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT)  -synapseWorkspaceName $(SYNAPSE_WORKSPACE_NAME) -synapseAdministratorLogin $(SYNAPSE_USERNAME) -synapseAdministratorLoginPassword $(SYNAPSE_PASSWORD) -synapseStorageAccount $(LAKEHOUSE_STORAGE_ACCOUNT) -synapseStorageAccountFilesystem $(SYNAPSE_CONTAINER)'
+            overrideParameters: '-vaultName $(KEY_VAULT_NAME)  -synapseWorkspaceName $(SYNAPSE_WORKSPACE_NAME) -synapseStorageAccount $(LAKEHOUSE_STORAGE_ACCOUNT) -synapseStorageAccountFilesystem $(SYNAPSE_CONTAINER) -adminPasswordsecretName $(SQL_PASSWORD_SECRET) -adminLoginUsersecretName $(SQL_USERNAME_SECRET) -vaultResourceGroupName $(KEY_VAULT_RESOURCE_GROUP)'
             deploymentMode: 'Incremental'
             deploymentName: 'synapse'
