@@ -1,6 +1,11 @@
 trigger:
-# - master
-- azure-pipelines
+  branches:
+    include:
+    - main
+    - project/infra/*
+  paths:
+    include:
+    - project/infra/*
 
 variables:
   - group: 'electroniz_infra_variables'
@@ -23,7 +28,7 @@ stages:
             location: '$(REGION)'
             templateLocation: 'Linked artifact'
             csmFile: 'project/infra/azure_sql/azure_sql.json'
-            overrideParameters: '-project $(PROJECT) -environment $(ENVIRONMENT) -vaultName $(KEY_VAULT_NAME) -databaseName $(SQL_DB_NAME) -adminPasswordsecretName $(SQL_PASSWORD_SECRET) -sqlServerName $(SQL_SERVERNAME) -adminLoginUsersecretName $(SQL_USERNAME_SECRET) -vaultResourceGroupName $(KEY_VAULT_RESOURCE_GROUP)'
+            overrideParameters: '-vaultName $(KEY_VAULT_NAME) -databaseName $(SQL_DB_NAME) -adminPasswordsecretName $(SQL_PASSWORD_SECRET) -sqlServerName $(SQL_SERVERNAME) -adminLoginUsersecretName $(SQL_USERNAME_SECRET) -vaultResourceGroupName $(KEY_VAULT_RESOURCE_GROUP)'
             deploymentMode: 'Incremental'
             deploymentName: 'sql'  
 
