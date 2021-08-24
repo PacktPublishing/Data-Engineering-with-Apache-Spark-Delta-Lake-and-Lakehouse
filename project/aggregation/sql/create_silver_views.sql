@@ -44,8 +44,8 @@ BEGIN
     EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''store_orders'') )
                          DROP EXTERNAL TABLE store_orders'
     SET @sqlcmd = N'CREATE EXTERNAL TABLE store_orders  ([order_number] INTEGER ,[customer_id] INTEGER ,[product_id] INTEGER ,
-                                                         [order_date] VARCHAR(255),[units] INTEGER ,[sale_price] VARCHAR(100) ,
-                                                         [sale_price_usd] VARCHAR(100) ,[currency] VARCHAR(255) ,[order_mode] VARCHAR(255) ,
+                                                         [order_date] VARCHAR(255),[units] INTEGER ,[sale_price] FLOAT ,
+                                                         [sale_price_usd] FLOAT ,[currency] VARCHAR(255) ,[order_mode] VARCHAR(255) ,
 	                                                     [updated_at] DATETIME ) 
         WITH (LOCATION = ''' +  @silverns  + '/sales/store_orders'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
@@ -53,8 +53,8 @@ BEGIN
     EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''ecomm_orders'') )
                          DROP EXTERNAL TABLE ecomm_orders'
     SET @sqlcmd = N'CREATE EXTERNAL TABLE ecomm_orders  ([order_number] INTEGER ,[email] VARCHAR(255) , [product_name] VARCHAR(255), 
-                                                         [order_date] VARCHAR(255),[order_mode] VARCHAR(255) ,[sale_price] VARCHAR(100) ,
-                                                         [sale_price_usd] VARCHAR(100) ,[updated_at] DATETIME ) 
+                                                         [order_date] VARCHAR(255),[order_mode] VARCHAR(255) ,[sale_price] FLOAT ,
+                                                         [sale_price_usd] FLOAT ,[updated_at] DATETIME ) 
         WITH (LOCATION = ''' +  @silverns  + '/esalesns'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
 
