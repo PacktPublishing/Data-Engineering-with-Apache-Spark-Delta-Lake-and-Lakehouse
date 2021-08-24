@@ -9,6 +9,10 @@ BEGIN
     IF EXISTS (SELECT * FROM sys.external_file_formats WHERE name = @format)
         SET @sqlcmd = N'DROP EXTERNAL FILE FORMAT ' + @format;
         EXEC sp_executesql @sqlcmd
+		
+	IF EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'DeltaLakeFormat')
+        SET @sqlcmd = N'DROP EXTERNAL FILE FORMAT DeltaLakeFormat';
+        EXEC sp_executesql @sqlcmd
 
     IF EXISTS (SELECT * FROM sys.external_data_sources WHERE name = @extds) 
         SET @sqlcmd = N'DROP EXTERNAL DATA SOURCE ' + @extds;
@@ -37,6 +41,10 @@ BEGIN
     IF  NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name =  @format)
         SET @sqlcmd = N'CREATE EXTERNAL FILE FORMAT ' +  @format + ' WITH (
         FORMAT_TYPE = PARQUET, DATA_COMPRESSION = ''org.apache.hadoop.io.compress.SnappyCodec'')';
+        EXEC sp_executesql @sqlcmd
+	
+	IF  NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name =  'DeltaLakeFormat')
+        SET @sqlcmd = N'CREATE EXTERNAL FILE FORMAT DeltaLakeFormat WITH (  FORMAT_TYPE = DELTA )';
         EXEC sp_executesql @sqlcmd
 END;
 GO

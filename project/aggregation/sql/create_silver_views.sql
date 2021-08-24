@@ -6,42 +6,61 @@ CREATE PROCEDURE create_silver_views  @silverns varchar(50), @location varchar(2
 AS
 BEGIN
     DECLARE @sqlcmd nvarchar(MAX)
-    EXEC sp_executesql N'DROP VIEW  IF EXISTS products'
-    SET @sqlcmd = N'CREATE OR ALTER VIEW products AS SELECT * FROM openrowset(
-	                BULK '''  + '/' + @silverns +'/sales/products/'',  data_source = ''trainingds'',
-                    FORMAT = ''delta'') AS rows';
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''products'') )
+                         DROP EXTERNAL TABLE products'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE products  (product_id INTEGER, product_name VARCHAR(255), 
+                                                     product_category VARCHAR(MAX), updated_at DATETIME) 
+        WITH (LOCATION = ''' +  @silverns  + '/sales/products'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
-	
-	EXEC sp_executesql N'DROP VIEW IF EXISTS customers'
-	SET @sqlcmd = N'CREATE OR ALTER VIEW customers AS
-	                SELECT customer_id, customer_name, address, city, postalcode, country, phone, email,credit_card, updated_at FROM openrowset(
-					BULK '''  + '/' + @silverns +'/sales/store_customers/'', data_source = ''trainingds'',FORMAT = ''delta'') AS rows
-	                UNION
-	                SELECT NULL AS customer_id, rows.customer_name, rows.address, rows.city, rows.postalcode, 
-		                   rows.country, rows.phone, rows.email, NULL AS credit_card, rows.updated_at FROM openrowset(
-				    BULK ''' +  '/' + @silverns +'/esalesns/'', data_source = ''trainingds'', FORMAT = ''delta'') AS rows'
+
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''store_customers'') )
+                         DROP EXTERNAL TABLE store_customers'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE store_customers  ([customer_id] INTEGER ,[customer_name] VARCHAR(255) ,[address] VARCHAR(255) ,
+                                                            [city] VARCHAR(255) ,[postalcode] VARCHAR(10) ,[country] VARCHAR(100) ,
+                                                            [phone] VARCHAR(100) ,[email] VARCHAR(255) ,[credit_card] VARCHAR(255) ,
+	                                                        [updated_at] DATETIME) 
+        WITH (LOCATION = ''' +  @silverns  + '/sales/store_customers'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
-    
-    EXEC sp_executesql N'DROP VIEW IF EXISTS store_orders'
-	SET @sqlcmd = N'CREATE OR ALTER VIEW store_orders AS
-                    SELECT * FROM openrowset(
-                    BULK ''' +  '/' + @silverns +'/sales/store_orders/'', data_source = ''trainingds'', FORMAT = ''delta'')   
-                    AS rows'	
+
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''ecomm_customers'') )
+                         DROP EXTERNAL TABLE ecomm_customers'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE ecomm_customers  ([customer_id] INTEGER , [customer_name] VARCHAR(255) ,[address] VARCHAR(255) ,
+										                    [city] VARCHAR(255) ,[postalcode] VARCHAR(10) ,[country] VARCHAR(100) ,
+										                    [phone] VARCHAR(100) ,[email] VARCHAR(255),  [updated_at] DATETIME ) 
+        WITH (LOCATION = ''' +  @silverns  + '/esalesns'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
-	
-	EXEC sp_executesql N'DROP VIEW IF EXISTS ecomm_orders'
-	SET @sqlcmd = N' CREATE OR ALTER VIEW ecomm_orders AS 
-	                 SELECT order_number, email, product_name, order_date, order_mode, sale_price, sale_price_usd, updated_at
-					 FROM openrowset(
-						BULK ''' +  '/' + @silverns +'/sales/store_orders/'', data_source = ''trainingds'', FORMAT = ''delta'')   
-						WITH ( order_number INT, product_name NVARCHAR(MAX), order_date DATE, order_mode NVARCHAR(MAX),
-							   email NVARCHAR(MAX), sale_price FLOAT, sale_price_usd FLOAT, updated_at DATETIME
-							 ) AS rows'	
+
+    EXEC sp_executesql N'DROP VIEW IF EXISTS customers'
+	SET @sqlcmd = N' CREATE OR ALTER VIEW customers AS 
+	                 SELECT  [customer_id],[customer_name]  ,[address],[city],[postalcode],
+                             [country],[phone],[email], NULL as credit_card,[updated_at]
+                     FROM [dbo].[ecomm_customers]
+                     UNION
+                     SELECT  [customer_id],[customer_name],[address],[city],[postalcode],
+                             [country],[phone],[email],[credit_card],[updated_at]
+                     FROM [dbo].[store_customers]'	
 	EXEC sp_executesql @sqlcmd
-	
-	EXEC sp_executesql N'DROP VIEW IF EXISTS orders'
-	SET @sqlcmd = N' CREATE OR ALTER VIEW orders AS 
-	                 SELECT order_number, email, product_name, order_date, units, sale_price,
+
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''store_orders'') )
+                         DROP EXTERNAL TABLE store_orders'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE store_orders  ([order_number] INTEGER ,[customer_id] INTEGER ,[product_id] INTEGER ,
+                                                         [order_date] VARCHAR(255),[units] INTEGER ,[sale_price] VARCHAR(100) ,
+                                                         [sale_price_usd] VARCHAR(100) ,[currency] VARCHAR(255) ,[order_mode] VARCHAR(255) ,
+	                                                     [updated_at] DATETIME ) 
+        WITH (LOCATION = ''' +  @silverns  + '/sales/store_orders'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
+	EXEC sp_executesql @sqlcmd
+
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''ecomm_orders'') )
+                         DROP EXTERNAL TABLE ecomm_orders'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE ecomm_orders  ([order_number] INTEGER ,[email] VARCHAR(255) , [product_name] VARCHAR(255), 
+                                                         [order_date] VARCHAR(255),[order_mode] VARCHAR(255) ,[sale_price] VARCHAR(100) ,
+                                                         [sale_price_usd] VARCHAR(100) ,[updated_at] DATETIME ) 
+        WITH (LOCATION = ''' +  @silverns  + '/esalesns'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
+	EXEC sp_executesql @sqlcmd
+
+     EXEC sp_executesql N'DROP VIEW IF EXISTS orders'
+	 SET @sqlcmd =  N'CREATE OR ALTER VIEW orders AS 
+                      SELECT order_number, email, product_name, order_date, units, sale_price,
 					        order_mode, sale_price_usd, dbo.store_orders.updated_at
 					 FROM dbo.store_orders 
 					 JOIN dbo.customers ON dbo.customers.customer_id = dbo.store_orders.customer_id
@@ -52,19 +71,23 @@ BEGIN
 					 FROM dbo.ecomm_orders'	
 	EXEC sp_executesql @sqlcmd
 
-    EXEC sp_executesql N'DROP VIEW IF EXISTS geolocation'
-	SET @sqlcmd = N'CREATE OR ALTER VIEW geolocation AS
-                    SELECT * FROM openrowset(
-                    BULK ''' +  '/' + @silverns +'/geolocation/'', data_source = ''trainingds'', FORMAT = ''delta'')   
-                    AS rows'	
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''geolocation'') )
+                         DROP EXTERNAL TABLE geolocation'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE geolocation  ([ip1] VARCHAR(255) , [ip2] VARCHAR(255) ,[country_code] VARCHAR(10) ,
+										                [country_name] VARCHAR(255) , [updated_at] DATETIME ) 
+        WITH (LOCATION = ''' +  @silverns  + '/geolocation'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
 
-    EXEC sp_executesql N'DROP VIEW IF EXISTS logs'
-	SET @sqlcmd = N'CREATE OR ALTER VIEW logs AS
-                    SELECT * FROM openrowset(
-                    BULK ''' +  '/' + @silverns +'/logs/'', data_source = ''trainingds'', FORMAT = ''delta'')   
-                    AS rows'	
+    EXEC sp_executesql N'IF EXISTS ( SELECT * FROM sys.external_tables WHERE object_id = OBJECT_ID(''logs'') )
+                         DROP EXTERNAL TABLE logs'
+    SET @sqlcmd = N'CREATE EXTERNAL TABLE logs  ([time] VARCHAR(255) ,[remote_ip] VARCHAR(255) ,[country_name] VARCHAR(255) ,
+                                                 [ip_number] INTEGER ,[request] VARCHAR(MAX) ,[response] VARCHAR(MAX) ,
+                                            	 [agent] VARCHAR(MAX) , [updated_at] DATETIME ) 
+        WITH (LOCATION = ''' +  @silverns  + '/logs'',  data_source = trainingds, FILE_FORMAT = DeltaLakeFormat)';
 	EXEC sp_executesql @sqlcmd
+
+
 END;
 GO
+
 
