@@ -16,7 +16,7 @@ This book covers the following exciting features:
 * Explore architectural and design patterns for building efficient data ingestion pipelines
 * Orchestrate a data pipeline for preprocessing data using Apache Spark and Delta Lake APIs
 
-If you feel this book is for you, get your [copy](https://www.amazon.com/dp/1801074321) today!
+If you feel this book is for you, get your [copy](https://www.amazon.com/dp/1801077746) today!
 
 <a href="https://www.packtpub.com/?utm_source=github&utm_medium=banner&utm_campaign=GitHubBanner"><img src="https://raw.githubusercontent.com/PacktPublishing/GitHub/master/GitHub.png" 
 alt="https://www.packtpub.com/" border="5" /></a>
@@ -34,7 +34,7 @@ df.plot("my_div_id").<chart type>
 **Following is what you need for this book:**
 This book is for aspiring data engineers and data analysts who are new to the world of data engineering and are looking for a practical guide to building scalable data platforms. If you already work with PySpark and want to use Delta Lake for data engineering, you'll find this book useful. Basic knowledge of Python, Spark, and SQL is expected.
 
-With the following software and hardware list you can run all code files present in the book (Chapter 1-15).
+With the following software and hardware list you can run all code files present in the book (Chapter 1-12).
 
 ### Software and Hardware List
 
